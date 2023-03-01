@@ -2,8 +2,11 @@ package com.example.miaplicacionmultiplespantallas;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 
 import com.example.miaplicacionmultiplespantallas.ui.main.MainFragment;
 import com.example.miaplicacionmultiplespantallas.ui.main.QuestionFragment;
