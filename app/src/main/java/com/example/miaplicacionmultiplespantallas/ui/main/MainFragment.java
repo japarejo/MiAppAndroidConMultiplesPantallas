@@ -1,12 +1,18 @@
 package com.example.miaplicacionmultiplespantallas.ui.main;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -49,27 +55,40 @@ public class MainFragment extends Fragment {
     }
 
     private void actualizarUsuario(View result) {
-        // Comprobamos si no tenemos el permiso:
+        // Comprobamos si no tenemos el permiso (esto vale para versión antiguas de Android):
         if(ContextCompat.checkSelfPermission(getContext(),"android.permission.GET_ACCOUNTS")==PERMISSION_DENIED){
             ActivityCompat.requestPermissions(getActivity(),PERMISSIONS_ACCOUNT,23);
         }
+        // Intentamos obtener la cuenta y si no la tenemos, solicitamos el permiso y la cuenta a usar:
         TextView view=result.findViewById(R.id.BienvenidaTextView);
-        AccountManager am = AccountManager.get(this.getContext());
+        Context context=this.getContext();
+        AccountManager am = AccountManager.get(context);
         Account[] accounts = am.getAccountsByType("com.google");
         if(accounts.length!=0){
             view.setText("Bienvenido, "+accounts[0].name);
         }else{
-            Intent intent = AccountManager.newChooseAccountIntent(null, null,
+            // Creamos el Intent, es decir la ventana, que nos permitirá elegir la cuenta del sistema a usar:
+             Intent intent = AccountManager.newChooseAccountIntent(null, null,
                     new String[] {"com.google", "com.google.android.legacyimap"},
                     null, null, null, null);
-            startActivityForResult(intent, 7);
-
-            accounts = am.getAccountsByType("com.google");
-            if(accounts.length!=0)
-                view.setText("Bienvenido, "+accounts[0].name);
-            else
-                view.setText("Bienvenido, no encuentro tu cuenta asocicada");
+            // Definimos qué debe hacer la aplicación una vez se haya escogido la cuenta a usar:
+            ActivityResultLauncher<Intent> mGetAccounts = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    new ActivityResultCallback<ActivityResult>() {
+                        @Override
+                        public void onActivityResult(ActivityResult result) {
+                            // Básicamente sacamos la cuenta con el account manager y mostramos el nombre:
+                            AccountManager am = AccountManager.get(context);
+                            Account[] accounts = am.getAccountsByType("com.google");
+                            if(accounts.length!=0)
+                                view.setText("Bienvenido, "+accounts[0].name);
+                            else
+                                view.setText("Bienvenido, no encuentro tu cuenta asocicada");
+                        }
+                    });
+            // Lanzamos la ejecución de la nueva ventana (de elección de cuenta), para que se muestre:
+            mGetAccounts.launch(intent);
         }
+
     }
 
 
