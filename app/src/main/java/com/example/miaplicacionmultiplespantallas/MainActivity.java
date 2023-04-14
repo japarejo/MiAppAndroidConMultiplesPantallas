@@ -8,17 +8,17 @@ import androidx.room.Room;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
 import com.example.miaplicacionmultiplespantallas.model.AppDatabase;
+import com.example.miaplicacionmultiplespantallas.model.LectureSession;
 import com.example.miaplicacionmultiplespantallas.model.Question;
 import com.example.miaplicacionmultiplespantallas.model.DatabaseInitializationCallback;
+import com.example.miaplicacionmultiplespantallas.ui.main.CalendarFragment;
 import com.example.miaplicacionmultiplespantallas.ui.main.MainFragment;
 import com.example.miaplicacionmultiplespantallas.ui.main.QuestionFragment;
 import com.example.miaplicacionmultiplespantallas.ui.main.WebFragment;
@@ -111,6 +111,19 @@ public class MainActivity extends AppCompatActivity {
     public void repasar(View view){
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, WebFragment.newInstance("https://www.us.es"))
+                .commitNow();
+    }
+
+    public void mostrarCalendario(View view){
+        DatabaseInitializationCallback databaseCallback = new DatabaseInitializationCallback();
+        AppDatabase db = Room.databaseBuilder(getApplicationContext(),
+                        AppDatabase.class, "database-name").
+                addCallback(databaseCallback).
+                allowMainThreadQueries().
+                build();
+        List<LectureSession> sessions=db.lectureSessionDao().getSessions();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, CalendarFragment.newInstance(sessions))
                 .commitNow();
     }
 

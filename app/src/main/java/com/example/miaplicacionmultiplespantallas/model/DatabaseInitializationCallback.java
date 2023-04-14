@@ -13,7 +13,7 @@ import java.util.List;
 
 public class DatabaseInitializationCallback extends RoomDatabase.Callback {
     public void onCreate (SupportSQLiteDatabase db){
-        String SQL_CREATE_TABLE = "CREATE TABLE question (" +
+        String SQL_CREATE_QUESTION_TABLE = "CREATE TABLE question (" +
                                     "id INTEGER PRIMARY KEY AUTOINCREMENT, "+
                                     "title TEXT, " +
                                     "content TEXT, " +
@@ -22,20 +22,50 @@ public class DatabaseInitializationCallback extends RoomDatabase.Callback {
                                     "answer3 TEXT, " +
                                     "answer4 TEXT, " +
                                     "validAnswer INTEGER )";
+
+        String SQL_CREATE_LECTURES_TABLE ="CREATE TABLE lecturesession ("+
+                                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "+
+                                    "details TEXT, "+
+                                    "datetime INTEGER, "+
+                                    "location TEXT)";
         try{
-            db.execSQL(SQL_CREATE_TABLE);
+            db.execSQL(SQL_CREATE_QUESTION_TABLE);
+            db.execSQL(SQL_CREATE_LECTURES_TABLE);
             Log.d("db create ","table created first time in onCreate");
         }catch(android.database.sqlite.SQLiteException ex){
             Log.d("db create ","table already exist!" +
                     "");
         }
         if(!isDbInitialized(db)) {
-            List<ContentValues> contentValues = initialQuestions();
-
-            for (ContentValues contentValue : contentValues)
+            List<ContentValues> questions = initialQuestions();
+            for (ContentValues contentValue : questions)
                 db.insert("question", OnConflictStrategy.IGNORE, contentValue);
+
+            List<ContentValues> lectures= initialLectures();
+            for(ContentValues values:lectures)
+                db.insert("lecturesession",OnConflictStrategy.IGNORE, values);
         }
     }
+
+    private List<ContentValues> initialLectures() {
+        List<ContentValues> result=new ArrayList<ContentValues>();
+        String[][] lessons= {
+                {"Sessión del curso","168390864","En casa, es online"}
+        };
+        for(int i=0;i<lessons.length;i++){
+            result.add(createLectureContentValues(lessons[i]));
+        }
+        return result;
+    }
+
+    private ContentValues createLectureContentValues(String[] lesson) {
+        ContentValues result=new ContentValues();
+        result.put("details",lesson[0]);
+        result.put("datetime",Long.valueOf(lesson[1]));
+        result.put("location",lesson[2]);
+        return result;
+    }
+
 
     private boolean isDbInitialized(SupportSQLiteDatabase db) {
         boolean result=false;
@@ -69,6 +99,7 @@ public class DatabaseInitializationCallback extends RoomDatabase.Callback {
         }
         return result;
     }
+
 
     private ContentValues createContentValues(String[] question, int validAnswer) {
         ContentValues result=new ContentValues();
